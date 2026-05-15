@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Base de portafolio web con blog/newsletter, estilo cyberpunk corporativo y líneas luminosas."
+    />
+    <title>Portfolio Signal</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <canvas id="signal-canvas" aria-hidden="true"></canvas>
+    <div class="scanline" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Ir al inicio">
+        <span class="brand-mark"></span>
+        <span>PORTFOLIO_SIGNAL</span>
+      </a>
+      <nav aria-label="Principal">
+        <a href="#work">Work</a>
+        <a href="#log">Log</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <p class="system-tag">VISUAL ID / WEB / SIGNAL DESIGN</p>
+            <h1 id="hero-title">Portafolio para una presencia digital precisa.</h1>
+            <p class="hero-lede">
+              Una base editorial, sobria y modular para presentar proyectos,
+              publicar notas y convertir lecturas en una lista de newsletter.
+            </p>
+            <div class="hero-actions">
+              <a class="button primary" href="#work">Ver módulos</a>
+              <a class="button ghost" href="#log">Abrir log</a>
+            </div>
+          </div>
+
+          <aside class="status-panel" aria-label="Estado del sistema">
+            <div class="panel-row">
+              <span>Identity</span>
+              <strong>ONLINE</strong>
+            </div>
+            <div class="panel-row">
+              <span>Signal</span>
+              <strong>94.8%</strong>
+            </div>
+            <div class="panel-row">
+              <span>Mode</span>
+              <strong>EDITORIAL</strong>
+            </div>
+            <div class="ticker" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="section work-section" id="work" aria-labelledby="work-title">
+        <div class="section-heading">
+          <p class="system-tag">ARCHIVE / CASES</p>
+          <h2 id="work-title">Módulos de portafolio</h2>
+        </div>
+        <div class="work-grid">
+          <article class="work-card">
+            <div class="work-index">01</div>
+            <h3>Interface Systems</h3>
+            <p>Casos de diseño UI, dashboards, herramientas internas y productos digitales con estética técnica.</p>
+            <a href="#contact">Solicitar brief</a>
+          </article>
+          <article class="work-card">
+            <div class="work-index">02</div>
+            <h3>Visual Identity</h3>
+            <p>Identidad para marcas con tono sobrio, contrastes fuertes, tipografía de sistema y composición editorial.</p>
+            <a href="#contact">Iniciar proyecto</a>
+          </article>
+          <article class="work-card">
+            <div class="work-index">03</div>
+            <h3>Signal Content</h3>
+            <p>Un bloque listo para publicar notas, releases, bitácoras de proceso o cápsulas para newsletter.</p>
+            <a href="#log">Leer entradas</a>
+          </article>
+        </div>
+      </section>
+
+      <section class="section split-section" id="log" aria-labelledby="log-title">
+        <div class="section-heading">
+          <p class="system-tag">BLOG / NEWSLETTER</p>
+          <h2 id="log-title">Signal Log</h2>
+        </div>
+        <div class="log-layout">
+          <div class="post-list">
+            <article class="post-item">
+              <time datetime="2026-05-12">12 MAY 2026</time>
+              <h3>Diseñar una web que parezca un panel vivo</h3>
+              <p>Notas sobre microanimación, jerarquía brutalista y líneas que aparecen sin robar atención.</p>
+            </article>
+            <article class="post-item">
+              <time datetime="2026-05-05">05 MAY 2026</time>
+              <h3>Cyberpunk corporativo sin saturar la interfaz</h3>
+              <p>Paleta controlada, brillo medido, tipografía dura y espacios silenciosos para que el contenido mande.</p>
+            </article>
+            <article class="post-item">
+              <time datetime="2026-04-22">22 APR 2026</time>
+              <h3>Bitácora de proyectos como herramienta comercial</h3>
+              <p>Cómo convertir avances técnicos, decisiones visuales y aprendizajes en contenido publicable.</p>
+            </article>
+          </div>
+
+          <form class="newsletter" id="newsletter-form">
+            <p class="system-tag">SUBSCRIBE</p>
+            <h3>Recibe el siguiente pulso.</h3>
+            <label for="email">Email</label>
+            <div class="input-line">
+              <input
+                id="email"
+                name="email"
+                type="text"
+                inputmode="email"
+                autocomplete="email"
+                pattern="^[^@\s]+@[^@\s]+\.[^@\s]+$"
+                placeholder="tu@email.com"
+                required
+              />
+              <button type="submit" aria-label="Suscribirse">JOIN</button>
+            </div>
+            <p class="form-status" id="form-status" role="status"></p>
+          </form>
+        </div>
+      </section>
+
+      <section class="contact-strip" id="contact" aria-label="Contacto">
+        <div>
+          <p class="system-tag">CONTACT CHANNEL</p>
+          <h2>Listo para conectar tu identidad, proyectos y contenido.</h2>
+        </div>
+        <a class="button primary" href="mailto:hola@portfolio-signal.local">hola@portfolio-signal.local</a>
+      </section>
+    </main>
+
+    <script src="./script.js"></script>
+  </body>
+</html>
