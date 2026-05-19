@@ -13,7 +13,7 @@
         document.documentElement.dataset.editorialTheme = theme;
       })();
     </script>
-    <link rel="stylesheet" href="{{ asset('css/editorial-black.css') }}?v=project-images-3">
+    <link rel="stylesheet" href="{{ asset('css/editorial-black.css') }}?v=project-images-4">
   </head>
   <body>
     <canvas id="ember-canvas" class="motion-lines-canvas" aria-hidden="true"></canvas>

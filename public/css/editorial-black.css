@@ -1101,6 +1101,21 @@ input:focus {
   transform: rotate(13deg) scale(1.03);
 }
 
+.project-thumb .card-border-motion,
+.case-visual .card-border-motion {
+  display: none !important;
+}
+
+.project-thumb::before,
+.project-thumb::after,
+.case-visual::before,
+.case-visual::after {
+  content: none !important;
+  border: 0 !important;
+  transform: none !important;
+  animation: none !important;
+}
+
 .visual-two {
   background:
     radial-gradient(circle at 78% 22%, color-mix(in srgb, var(--paper) 32%, transparent), transparent 16rem),
