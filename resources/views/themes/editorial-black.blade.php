@@ -13,7 +13,7 @@
         document.documentElement.dataset.editorialTheme = theme;
       })();
     </script>
-    <link rel="stylesheet" href="{{ asset('css/editorial-black.css') }}?v=project-images-5">
+    <link rel="stylesheet" href="{{ asset('css/editorial-black.css') }}?v=project-images-6">
   </head>
   <body>
     <canvas id="ember-canvas" class="motion-lines-canvas" aria-hidden="true"></canvas>
@@ -125,9 +125,13 @@
           @forelse ($projects as $project)
             <article class="portfolio-item">
               @if ($project->image_url)
-                <a href="{{ route('projects.show', $project) }}" class="project-image-frame" aria-label="Ver {{ $project->title }}">
-                  <img src="{{ $project->image_url }}" alt="Foto de {{ $project->title }}">
-                </a>
+                <a
+                  href="{{ route('projects.show', $project) }}"
+                  class="project-image-frame"
+                  style="background-image: url('{{ $project->image_url }}');"
+                  role="img"
+                  aria-label="Foto de {{ $project->title }}"
+                ></a>
               @else
                 <a href="{{ route('projects.show', $project) }}" class="project-thumb {{ $project->image_theme }}" aria-label="Ver {{ $project->title }}">
                   <span class="card-border-motion"></span>

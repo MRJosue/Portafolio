@@ -979,6 +979,9 @@ input:focus {
   min-width: 0;
   border: 1px solid var(--line);
   background: var(--panel-solid);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
   overflow: hidden;
   position: relative;
 }
