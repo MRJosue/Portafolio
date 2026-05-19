@@ -101,7 +101,7 @@
           <div class="admin-tab-panel is-active" data-admin-tab-panel="projects-create">
             <section class="admin-panel">
               <p class="eyebrow">NUEVO PROYECTO</p>
-              <form action="{{ route('admin.projects.store') }}" method="POST" class="admin-form">
+              <form action="{{ route('admin.projects.store') }}" method="POST" enctype="multipart/form-data" class="admin-form">
                 @csrf
                 <label for="project_title">Titulo</label>
                 <input id="project_title" name="title" type="text" value="{{ old('title') }}" required>
@@ -161,6 +161,10 @@
                   </div>
                 </div>
 
+                <label for="project_image">Foto del proyecto</label>
+                <input id="project_image" name="image" type="file" accept="image/*">
+                @error('image') <p class="status error">{{ $message }}</p> @enderror
+
                 <div class="admin-fields compact">
                   <label class="check-row">
                     <input name="is_featured" type="checkbox" value="1" checked>
@@ -186,8 +190,20 @@
               <div class="admin-list">
                 @forelse ($projects as $project)
                   <article>
+                    @if ($project->image_url)
+                      <img class="admin-project-thumb" src="{{ $project->image_url }}" alt="Foto de {{ $project->title }}">
+                    @else
+                      <span class="admin-project-thumb placeholder">Sin foto</span>
+                    @endif
                     <strong>{{ $project->title }}</strong>
                     <span>{{ $project->service }} / {{ $project->status }} / {{ optional($project->published_at)->format('d-m-Y') ?? 'sin publicar' }}</span>
+                    <form action="{{ route('admin.projects.image.update', $project) }}" method="POST" enctype="multipart/form-data" class="admin-inline-upload">
+                      @csrf
+                      @method('PATCH')
+                      <label for="project_image_{{ $project->id }}">Foto</label>
+                      <input id="project_image_{{ $project->id }}" name="image" type="file" accept="image/*" required>
+                      <button type="submit">Guardar foto</button>
+                    </form>
                     <div class="admin-actions">
                       <a href="{{ route('projects.show', $project) }}">Ver</a>
                       <form action="{{ route('admin.projects.destroy', $project) }}" method="POST">

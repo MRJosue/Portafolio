@@ -49,7 +49,12 @@
         </aside>
       </section>
 
-      <div class="case-visual {{ $project->image_theme }}" aria-hidden="true"><span class="card-border-motion"></span></div>
+      <div class="case-visual {{ $project->image_theme }} {{ $project->image_url ? 'has-image' : '' }}" aria-label="Foto de {{ $project->title }}">
+        @if ($project->image_url)
+          <img src="{{ $project->image_url }}" alt="Foto de {{ $project->title }}">
+        @endif
+        <span class="card-border-motion"></span>
+      </div>
 
       <section class="case-body">
         <article>

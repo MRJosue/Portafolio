@@ -966,6 +966,23 @@ input:focus {
     transform 360ms ease;
 }
 
+.project-thumb img,
+.case-visual img {
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  display: block;
+  object-fit: cover;
+  position: relative;
+  z-index: 1;
+}
+
+.project-thumb.has-image,
+.case-visual.has-image {
+  background: var(--panel-solid);
+  overflow: hidden;
+}
+
 .card-border-motion {
   position: absolute;
   inset: -1px;
@@ -1016,6 +1033,13 @@ input:focus {
   inset: 13%;
   border: 1px solid color-mix(in srgb, var(--inverse) 18%, transparent);
   transform: rotate(-6deg);
+}
+
+.project-thumb.has-image::before,
+.project-thumb.has-image::after,
+.case-visual.has-image::before,
+.case-visual.has-image::after {
+  content: none;
 }
 
 .project-thumb::after,

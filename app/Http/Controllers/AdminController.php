@@ -74,9 +74,12 @@ class AdminController extends Controller
             'results' => ['nullable', 'string'],
             'technologies' => ['nullable', 'string', 'max:300'],
             'image_theme' => ['required', 'string', 'in:visual-one,visual-two,visual-three'],
+            'image' => ['nullable', 'image', 'max:6144'],
             'is_featured' => ['nullable', 'boolean'],
             'status' => ['required', 'string', 'in:draft,published'],
         ]);
+        $projectImage = $request->file('image');
+        unset($validated['image']);
 
         $baseSlug = Str::slug($validated['title']);
         $slug = $baseSlug;
@@ -95,6 +98,7 @@ class AdminController extends Controller
                 ->filter()
                 ->values()
                 ->all(),
+            'image_path' => $projectImage ? $this->storeProjectImage($projectImage) : null,
             'is_featured' => (bool) ($validated['is_featured'] ?? false),
             'published_at' => $validated['status'] === 'published' ? now() : null,
         ]);
@@ -102,8 +106,29 @@ class AdminController extends Controller
         return back()->with('admin_status', 'Proyecto creado en la base de datos.');
     }
 
+    public function updateProjectImage(Request $request, Project $project): RedirectResponse
+    {
+        $request->validate([
+            'image' => ['required', 'image', 'max:6144'],
+        ]);
+
+        if ($project->image_path) {
+            $this->deleteProjectImage($project->image_path);
+        }
+
+        $project->update([
+            'image_path' => $this->storeProjectImage($request->file('image')),
+        ]);
+
+        return back()->with('admin_status', 'Foto del proyecto actualizada.');
+    }
+
     public function destroyProject(Project $project): RedirectResponse
     {
+        if ($project->image_path) {
+            $this->deleteProjectImage($project->image_path);
+        }
+
         $project->delete();
 
         return back()->with('admin_status', 'Proyecto eliminado.');
@@ -150,6 +175,29 @@ class AdminController extends Controller
         $image->move($directory, $filename);
 
         return 'uploads/profile-card/'.$filename;
+    }
+
+    private function storeProjectImage($image): string
+    {
+        $directory = public_path('uploads/projects');
+
+        File::ensureDirectoryExists($directory);
+
+        $filename = Str::uuid()->toString().'.'.$image->guessExtension();
+        $image->move($directory, $filename);
+
+        return 'uploads/projects/'.$filename;
+    }
+
+    private function deleteProjectImage(string $path): void
+    {
+        if (Str::startsWith($path, 'uploads/projects/')) {
+            File::delete(public_path($path));
+
+            return;
+        }
+
+        Storage::disk('public')->delete($path);
     }
 
     private function deleteProfileImage(string $path): void

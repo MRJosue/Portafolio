@@ -14,7 +14,7 @@
         <!-- Email Address -->
         <div>
             <x-input-label for="email" :value="__('Email')" class="font-mono text-xs uppercase tracking-[0.16em] text-[#3f362d]" />
-            <x-text-input id="email" class="mt-2 block w-full rounded-none border-[#17130e]/20 bg-white/70 px-4 py-3 text-[#17130e] shadow-none focus:border-[#bf5945] focus:ring-[#bf5945]" type="email" name="email" :value="old('email', 'ingjosue.cardona@gmail.com')" required autofocus autocomplete="username" />
+            <x-text-input id="email" class="mt-2 block w-full rounded-none border-[#17130e]/20 bg-white/70 px-4 py-3 text-[#17130e] shadow-none focus:border-[#bf5945] focus:ring-[#bf5945]" type="email" name="email" :value="old('email')" required autofocus autocomplete="off" />
             <x-input-error :messages="$errors->get('email')" class="mt-2" />
         </div>
 
