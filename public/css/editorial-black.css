@@ -944,7 +944,7 @@ input:focus {
   border: 1px solid transparent;
   background: var(--panel);
   padding: 1rem;
-  overflow: hidden;
+  overflow: visible;
   transition:
     border-color 360ms ease,
     box-shadow 360ms ease,
@@ -990,15 +990,18 @@ input:focus {
   border: 1px solid var(--line);
   background: var(--panel);
   padding: clamp(0.85rem, 1.8vw, 1.25rem);
-  overflow: hidden;
+  margin: 0 0 2rem;
+  overflow: visible;
 }
 
 .project-image-frame {
   aspect-ratio: 16 / 10;
+  min-height: clamp(240px, 30vw, 430px);
 }
 
 .case-image-frame {
   aspect-ratio: 16 / 9;
+  min-height: clamp(360px, 46vw, 680px);
   margin: 0;
 }
 
