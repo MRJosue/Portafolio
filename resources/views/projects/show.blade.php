@@ -49,12 +49,15 @@
         </aside>
       </section>
 
-      <div class="case-visual {{ $project->image_theme }} {{ $project->image_url ? 'has-image' : '' }}" aria-label="Foto de {{ $project->title }}">
-        @if ($project->image_url)
+      @if ($project->image_url)
+        <figure class="case-image-frame" aria-label="Foto de {{ $project->title }}">
           <img src="{{ $project->image_url }}" alt="Foto de {{ $project->title }}">
-        @endif
-        <span class="card-border-motion"></span>
-      </div>
+        </figure>
+      @else
+        <div class="case-visual {{ $project->image_theme }}" aria-hidden="true">
+          <span class="card-border-motion"></span>
+        </div>
+      @endif
 
       <section class="case-body">
         <article>

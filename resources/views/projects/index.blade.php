@@ -46,12 +46,15 @@
       <section class="project-index" aria-label="Todos los proyectos">
         @forelse ($projects as $project)
           <article class="project-card">
-            <a href="{{ route('projects.show', $project) }}" class="project-thumb {{ $project->image_theme }} {{ $project->image_url ? 'has-image' : '' }}" aria-label="Ver {{ $project->title }}">
-              @if ($project->image_url)
+            @if ($project->image_url)
+              <a href="{{ route('projects.show', $project) }}" class="project-image-frame" aria-label="Ver {{ $project->title }}">
                 <img src="{{ $project->image_url }}" alt="Foto de {{ $project->title }}">
-              @endif
-              <span class="card-border-motion"></span>
-            </a>
+              </a>
+            @else
+              <a href="{{ route('projects.show', $project) }}" class="project-thumb {{ $project->image_theme }}" aria-label="Ver {{ $project->title }}">
+                <span class="card-border-motion"></span>
+              </a>
+            @endif
             <div class="project-card-copy">
               <p class="kicker">{{ $project->service }} / {{ $project->year ?? 'En curso' }}</p>
               <h2><a href="{{ route('projects.show', $project) }}">{{ $project->title }}</a></h2>
