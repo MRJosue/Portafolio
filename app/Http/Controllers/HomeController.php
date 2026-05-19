@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\Project;
 use App\Models\SiteSetting;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -74,6 +75,10 @@ class HomeController extends Controller
 
     private function publicStorageUrl(?string $path): ?string
     {
+        if ($path && Str::startsWith($path, 'uploads/profile-card/')) {
+            return asset($path);
+        }
+
         return $path ? Storage::disk('public')->url($path) : null;
     }
 }

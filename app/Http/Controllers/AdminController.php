@@ -9,6 +9,7 @@ use App\Models\SiteSetting;
 use App\Models\Subscriber;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -130,13 +131,36 @@ class AdminController extends Controller
 
             $currentPath = SiteSetting::getValue($field);
             if ($currentPath) {
-                Storage::disk('public')->delete($currentPath);
+                $this->deleteProfileImage($currentPath);
             }
 
-            SiteSetting::setValue($field, $request->file($field)->store('profile-card', 'public'));
+            SiteSetting::setValue($field, $this->storeProfileImage($request->file($field)));
         }
 
         return back()->with('admin_status', 'Fotos de perfil actualizadas.');
+    }
+
+    private function storeProfileImage($image): string
+    {
+        $directory = public_path('uploads/profile-card');
+
+        File::ensureDirectoryExists($directory);
+
+        $filename = Str::uuid()->toString().'.'.$image->guessExtension();
+        $image->move($directory, $filename);
+
+        return 'uploads/profile-card/'.$filename;
+    }
+
+    private function deleteProfileImage(string $path): void
+    {
+        if (Str::startsWith($path, 'uploads/profile-card/')) {
+            File::delete(public_path($path));
+
+            return;
+        }
+
+        Storage::disk('public')->delete($path);
     }
 
     private function profileSettings(): array
@@ -152,11 +176,24 @@ class AdminController extends Controller
             ->pluck('value', 'key');
 
         return [
-            'profile_light_a' => $settings->get('profile_light_a'),
-            'profile_light_b' => $settings->get('profile_light_b'),
-            'profile_dark_a' => $settings->get('profile_dark_a'),
-            'profile_dark_b' => $settings->get('profile_dark_b'),
+            'profile_light_a' => $this->profileImageUrl($settings->get('profile_light_a')),
+            'profile_light_b' => $this->profileImageUrl($settings->get('profile_light_b')),
+            'profile_dark_a' => $this->profileImageUrl($settings->get('profile_dark_a')),
+            'profile_dark_b' => $this->profileImageUrl($settings->get('profile_dark_b')),
             'profile_quote' => $settings->get('profile_quote') ?: 'Construir bien tambien es una forma de pensar con calma.',
         ];
+    }
+
+    private function profileImageUrl(?string $path): ?string
+    {
+        if (! $path) {
+            return null;
+        }
+
+        if (Str::startsWith($path, 'uploads/profile-card/')) {
+            return asset($path);
+        }
+
+        return Storage::disk('public')->url($path);
     }
 }

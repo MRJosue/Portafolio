@@ -112,6 +112,13 @@ class ChatController extends Controller
         return back()->with('admin_status', 'Respuesta enviada al chat del cliente.');
     }
 
+    public function destroy(ChatSession $chatSession): RedirectResponse
+    {
+        $chatSession->delete();
+
+        return back()->with('admin_status', 'Chat eliminado correctamente.');
+    }
+
     private function authorizePublicSession(ChatSession $chatSession, Request $request): void
     {
         abort_unless(hash_equals($chatSession->session_key, $request->string('session_key')->toString()), 403);

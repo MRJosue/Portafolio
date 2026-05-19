@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ChatController;
+use App\Http\Controllers\FinancialEntryController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProfileController;
@@ -26,11 +27,17 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
+    Route::get('/admin/finanzas', [FinancialEntryController::class, 'calendar'])->name('admin.finances.calendar');
+    Route::get('/admin/finanzas/{date}', [FinancialEntryController::class, 'day'])->name('admin.finances.day');
+    Route::post('/admin/finanzas/{date}/entradas', [FinancialEntryController::class, 'store'])->name('admin.finances.entries.store');
+    Route::patch('/admin/finanzas/{date}/entradas/{entry}', [FinancialEntryController::class, 'update'])->name('admin.finances.entries.update');
+    Route::delete('/admin/finanzas/{date}/entradas/{entry}', [FinancialEntryController::class, 'destroy'])->name('admin.finances.entries.destroy');
     Route::post('/admin/posts', [AdminController::class, 'storePost'])->name('admin.posts.store');
     Route::post('/admin/projects', [AdminController::class, 'storeProject'])->name('admin.projects.store');
     Route::post('/admin/profile-card', [AdminController::class, 'updateProfileCard'])->name('admin.profile-card.update');
     Route::delete('/admin/projects/{project}', [AdminController::class, 'destroyProject'])->name('admin.projects.destroy');
     Route::post('/admin/chat/{chatSession}/reply', [ChatController::class, 'adminReply'])->name('admin.chat.reply');
+    Route::delete('/admin/chat/{chatSession}', [ChatController::class, 'destroy'])->name('admin.chat.destroy');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');

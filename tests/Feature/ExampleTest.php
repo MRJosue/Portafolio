@@ -3,13 +3,14 @@
 namespace Tests\Feature;
 
 use App\Mail\ChatLeadReceived;
+use App\Models\ChatSession;
 use App\Models\Project;
 use App\Models\SiteSetting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class ExampleTest extends TestCase
@@ -139,8 +140,6 @@ class ExampleTest extends TestCase
 
     public function test_admin_can_update_profile_card_photos(): void
     {
-        Storage::fake('public');
-
         $user = User::factory()->create([
             'email' => 'ingjosue.cardona@gmail.com',
         ]);
@@ -160,7 +159,10 @@ class ExampleTest extends TestCase
         foreach (['profile_light_a', 'profile_light_b', 'profile_dark_a', 'profile_dark_b'] as $key) {
             $path = SiteSetting::getValue($key);
             $this->assertNotNull($path);
-            Storage::disk('public')->assertExists($path);
+            $this->assertStringStartsWith('uploads/profile-card/', $path);
+            $this->assertTrue(File::exists(public_path($path)));
+
+            File::delete(public_path($path));
         }
     }
 
@@ -220,6 +222,37 @@ class ExampleTest extends TestCase
         $this->assertDatabaseHas('chat_messages', [
             'sender' => 'admin',
             'body' => 'Claro, revisemos el alcance.',
+        ]);
+    }
+
+    public function test_admin_can_delete_a_chat_session_with_its_messages(): void
+    {
+        $chatSession = ChatSession::create([
+            'session_key' => 'delete-me',
+            'name' => 'Cliente Demo',
+            'email' => 'cliente@example.com',
+            'status' => 'lead',
+            'last_message_at' => now(),
+        ]);
+
+        $chatSession->messages()->create([
+            'sender' => 'visitor',
+            'body' => 'Quiero borrar esta conversacion.',
+        ]);
+
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->delete("/admin/chat/{$chatSession->id}")
+            ->assertRedirect()
+            ->assertSessionHas('admin_status', 'Chat eliminado correctamente.');
+
+        $this->assertDatabaseMissing('chat_sessions', [
+            'id' => $chatSession->id,
+        ]);
+
+        $this->assertDatabaseMissing('chat_messages', [
+            'chat_session_id' => $chatSession->id,
         ]);
     }
 

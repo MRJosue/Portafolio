@@ -1,0 +1,126 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\FinancialEntry;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class FinancialEntryTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_finance_calendar_requires_authentication(): void
+    {
+        $this->get('/admin/finanzas')->assertRedirect('/login');
+    }
+
+    public function test_admin_can_create_fixed_and_daily_entries(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post('/admin/finanzas/2026-05-18/entradas', [
+            'name' => 'Renta',
+            'description' => 'Pago mensual',
+            'amount' => '1200.50',
+            'type' => FinancialEntry::TYPE_FIXED_EXPENSE,
+            'is_active' => '1',
+        ])->assertRedirect();
+
+        $this->actingAs($user)->post('/admin/finanzas/2026-05-18/entradas', [
+            'name' => 'Cafe',
+            'amount' => '45',
+            'type' => FinancialEntry::TYPE_EXPENSE,
+            'is_active' => '1',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('financial_entries', [
+            'name' => 'Renta',
+            'type' => FinancialEntry::TYPE_FIXED_EXPENSE,
+            'entry_date' => null,
+        ]);
+
+        $this->assertDatabaseHas('financial_entries', [
+            'name' => 'Cafe',
+            'type' => FinancialEntry::TYPE_EXPENSE,
+            'entry_date' => '2026-05-18 00:00:00',
+        ]);
+    }
+
+    public function test_day_detail_shows_fixed_entries_on_any_day_and_daily_entries_only_on_selected_day(): void
+    {
+        $user = User::factory()->create();
+
+        FinancialEntry::create([
+            'name' => 'Servidor',
+            'amount' => 300,
+            'type' => FinancialEntry::TYPE_FIXED_EXPENSE,
+            'is_active' => true,
+        ]);
+
+        FinancialEntry::create([
+            'name' => 'Consultoria',
+            'amount' => 900,
+            'type' => FinancialEntry::TYPE_INCOME,
+            'entry_date' => '2026-05-18',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)->get('/admin/finanzas/2026-05-18')
+            ->assertOk()
+            ->assertSee('Servidor')
+            ->assertSee('Consultoria')
+            ->assertSee('$600.00');
+
+        $this->actingAs($user)->get('/admin/finanzas/2026-05-19')
+            ->assertOk()
+            ->assertSee('Servidor')
+            ->assertDontSee('Consultoria');
+    }
+
+    public function test_admin_can_update_and_delete_financial_entries(): void
+    {
+        $user = User::factory()->create();
+        $entry = FinancialEntry::create([
+            'name' => 'Venta',
+            'amount' => 100,
+            'type' => FinancialEntry::TYPE_INCOME,
+            'entry_date' => '2026-05-18',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)->patch("/admin/finanzas/2026-05-18/entradas/{$entry->id}", [
+            'name' => 'Venta editada',
+            'amount' => 150,
+            'type' => FinancialEntry::TYPE_INCOME,
+            'is_active' => '1',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('financial_entries', [
+            'id' => $entry->id,
+            'name' => 'Venta editada',
+            'amount' => 150,
+        ]);
+
+        $this->actingAs($user)
+            ->delete("/admin/finanzas/2026-05-18/entradas/{$entry->id}")
+            ->assertRedirect();
+
+        $this->assertDatabaseMissing('financial_entries', [
+            'id' => $entry->id,
+        ]);
+    }
+
+    public function test_amount_must_be_numeric_and_not_negative(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post('/admin/finanzas/2026-05-18/entradas', [
+            'name' => 'Monto invalido',
+            'amount' => '-1',
+            'type' => FinancialEntry::TYPE_EXPENSE,
+            'is_active' => '1',
+        ])->assertSessionHasErrors('amount');
+    }
+}

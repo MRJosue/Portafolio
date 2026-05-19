@@ -21,6 +21,7 @@
           <a href="#overview" data-admin-link="overview">Resumen</a>
           <a href="#projects" data-admin-link="projects">Proyectos</a>
           <a href="#profile-card" data-admin-link="profile-card">Perfil</a>
+          <a href="{{ route('admin.finances.calendar') }}">Finanzas</a>
           <a href="#posts" data-admin-link="posts">Posts</a>
           <a href="#chats" data-admin-link="chats">Chats</a>
           <a href="#subscribers" data-admin-link="subscribers">Suscriptores</a>
@@ -78,6 +79,7 @@
             <div class="admin-quick-grid">
               <a href="#projects" data-admin-link="projects">Crear proyecto</a>
               <a href="#profile-card" data-admin-link="profile-card">Actualizar fotos</a>
+              <a href="{{ route('admin.finances.calendar') }}">Registrar finanzas</a>
               <a href="#posts" data-admin-link="posts">Publicar post</a>
               <a href="#chats" data-admin-link="chats">Revisar chats</a>
             </div>
@@ -265,7 +267,7 @@
                 <article>
                   <span>{{ $label }}</span>
                   @if ($profileSettings[$settingKey])
-                    <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($profileSettings[$settingKey]) }}" alt="Foto {{ $label }}">
+                    <img src="{{ $profileSettings[$settingKey] }}" alt="Foto {{ $label }}">
                   @else
                     <strong>Sin foto</strong>
                   @endif
@@ -363,6 +365,14 @@
                     @if ($chatSession->phone || $chatSession->topic)
                       <span>{{ $chatSession->phone ?? 'sin telefono' }} / {{ $chatSession->topic ?? 'sin tema' }}</span>
                     @endif
+                  </div>
+
+                  <div class="admin-actions">
+                    <form action="{{ route('admin.chat.destroy', $chatSession) }}" method="POST" onsubmit="return confirm('Eliminar este chat y todos sus mensajes?');">
+                      @csrf
+                      @method('DELETE')
+                      <button type="submit">Eliminar chat</button>
+                    </form>
                   </div>
 
                   <div class="admin-chat-thread">
