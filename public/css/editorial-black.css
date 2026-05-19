@@ -968,12 +968,12 @@ input:focus {
 
 .project-thumb img,
 .case-visual img {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
-  min-height: inherit;
   display: block;
   object-fit: cover;
-  position: relative;
   z-index: 1;
 }
 
@@ -981,6 +981,21 @@ input:focus {
 .case-visual.has-image {
   background: var(--panel-solid);
   overflow: hidden;
+}
+
+.project-thumb.has-image {
+  min-height: 0;
+  aspect-ratio: 16 / 10;
+}
+
+.case-visual.has-image {
+  min-height: 0;
+  aspect-ratio: 16 / 9;
+}
+
+.project-thumb.has-image .card-border-motion,
+.case-visual.has-image .card-border-motion {
+  display: none;
 }
 
 .card-border-motion {
