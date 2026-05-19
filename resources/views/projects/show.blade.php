@@ -12,7 +12,7 @@
         document.documentElement.dataset.editorialTheme = theme;
       })();
     </script>
-    <link rel="stylesheet" href="{{ asset('css/editorial-black.css') }}?v=project-image-frames-1">
+    <link rel="stylesheet" href="{{ asset('css/editorial-black.css') }}?v=project-image-frames-2">
   </head>
   <body>
     <canvas id="ember-canvas" class="motion-lines-canvas" aria-hidden="true"></canvas>
@@ -51,12 +51,9 @@
 
       @if ($project->image_url)
         <section class="case-image-panel" aria-label="Imagen del proyecto">
-          <figure
-            class="case-image-frame"
-            style="background-image: url('{{ $project->image_url }}'); background-position: center; background-repeat: no-repeat; background-size: contain; display: block; min-height: clamp(360px, 46vw, 680px); width: 100%;"
-            role="img"
-            aria-label="Foto de {{ $project->title }}"
-          ></figure>
+          <figure class="case-image-frame">
+            <img src="{{ $project->image_url }}" alt="Foto de {{ $project->title }}">
+          </figure>
         </section>
       @else
         <div class="case-visual {{ $project->image_theme }}" aria-hidden="true">
