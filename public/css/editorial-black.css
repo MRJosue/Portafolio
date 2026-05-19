@@ -944,11 +944,16 @@ input:focus {
   border: 1px solid transparent;
   background: var(--panel);
   padding: 1rem;
-  overflow: visible;
+  overflow: hidden;
   transition:
     border-color 360ms ease,
     box-shadow 360ms ease,
     transform 360ms ease;
+}
+
+.portfolio-item > *,
+.project-card > * {
+  min-width: 0;
 }
 
 .project-thumb,
@@ -969,6 +974,9 @@ input:focus {
 .project-image-frame,
 .case-image-frame {
   display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   border: 1px solid var(--line);
   background: var(--panel-solid);
   overflow: hidden;
