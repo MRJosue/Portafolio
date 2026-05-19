@@ -59,18 +59,18 @@ class AdminProjectImageTest extends TestCase
             'published_at' => now(),
         ]);
 
-        $this->actingAs($user)->patch("/admin/projects/{$project->slug}/image", [
+        $this->actingAs($user)->post("/admin/projects/{$project->slug}/image", [
             'image' => UploadedFile::fake()->image('portal.jpg', 1000, 700),
-        ])->assertRedirect();
+        ])->assertRedirect('/admin#projects');
 
         $project->refresh();
         $firstPath = $project->image_path;
 
         $this->assertFileExists(public_path($firstPath));
 
-        $this->actingAs($user)->patch("/admin/projects/{$project->slug}/image", [
+        $this->actingAs($user)->post("/admin/projects/{$project->slug}/image", [
             'image' => UploadedFile::fake()->image('portal-nueva.jpg', 1000, 700),
-        ])->assertRedirect();
+        ])->assertRedirect('/admin#projects');
 
         $project->refresh();
 

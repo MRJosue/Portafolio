@@ -120,7 +120,7 @@ class AdminController extends Controller
             'image_path' => $this->storeProjectImage($request->file('image')),
         ]);
 
-        return back()->with('admin_status', 'Foto del proyecto actualizada.');
+        return redirect(route('admin.index').'#projects')->with('admin_status', 'Foto del proyecto actualizada.');
     }
 
     public function destroyProject(Project $project): RedirectResponse

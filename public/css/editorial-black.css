@@ -1166,7 +1166,7 @@ input:focus {
 
 .case-body article {
   border-top: 1px solid var(--line);
-  padding-top: 1rem;
+  padding: clamp(1rem, 2vw, 1.5rem);
 }
 
 .case-body p:not(.kicker) {

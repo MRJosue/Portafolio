@@ -199,7 +199,6 @@
                     <span>{{ $project->service }} / {{ $project->status }} / {{ optional($project->published_at)->format('d-m-Y') ?? 'sin publicar' }}</span>
                     <form action="{{ route('admin.projects.image.update', $project) }}" method="POST" enctype="multipart/form-data" class="admin-inline-upload">
                       @csrf
-                      @method('PATCH')
                       <label for="project_image_{{ $project->id }}">Foto</label>
                       <input id="project_image_{{ $project->id }}" name="image" type="file" accept="image/*" required>
                       <button type="submit">Guardar foto</button>

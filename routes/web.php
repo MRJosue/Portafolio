@@ -34,7 +34,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/admin/finanzas/{date}/entradas/{entry}', [FinancialEntryController::class, 'destroy'])->name('admin.finances.entries.destroy');
     Route::post('/admin/posts', [AdminController::class, 'storePost'])->name('admin.posts.store');
     Route::post('/admin/projects', [AdminController::class, 'storeProject'])->name('admin.projects.store');
-    Route::patch('/admin/projects/{project}/image', [AdminController::class, 'updateProjectImage'])->name('admin.projects.image.update');
+    Route::match(['post', 'patch'], '/admin/projects/{project}/image', [AdminController::class, 'updateProjectImage'])->name('admin.projects.image.update');
     Route::post('/admin/profile-card', [AdminController::class, 'updateProfileCard'])->name('admin.profile-card.update');
     Route::delete('/admin/projects/{project}', [AdminController::class, 'destroyProject'])->name('admin.projects.destroy');
     Route::post('/admin/chat/{chatSession}/reply', [ChatController::class, 'adminReply'])->name('admin.chat.reply');
