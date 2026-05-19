@@ -12,7 +12,7 @@
         document.documentElement.dataset.editorialTheme = theme;
       })();
     </script>
-    <link rel="stylesheet" href="{{ asset('css/editorial-black.css') }}?v=project-images-9">
+    <link rel="stylesheet" href="{{ asset('css/editorial-black.css') }}?v=project-images-10">
   </head>
   <body>
     <canvas id="ember-canvas" class="motion-lines-canvas" aria-hidden="true"></canvas>
@@ -50,7 +50,7 @@
               <a
                 href="{{ route('projects.show', $project) }}"
                 class="project-image-frame"
-                style="background-image: url('{{ $project->image_url }}');"
+                style="background-image: url('{{ $project->image_url }}'); background-position: center; background-repeat: no-repeat; background-size: contain; display: block; min-height: clamp(240px, 30vw, 430px); width: 100%;"
                 role="img"
                 aria-label="Foto de {{ $project->title }}"
               ></a>
