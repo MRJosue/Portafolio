@@ -981,9 +981,16 @@ input:focus {
   background: var(--panel-solid);
   background-position: center;
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: contain;
   overflow: hidden;
   position: relative;
+}
+
+.case-image-panel {
+  border: 1px solid var(--line);
+  background: var(--panel);
+  padding: clamp(0.85rem, 1.8vw, 1.25rem);
+  overflow: hidden;
 }
 
 .project-image-frame {
