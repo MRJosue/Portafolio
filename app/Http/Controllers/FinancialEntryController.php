@@ -88,14 +88,30 @@ class FinancialEntryController extends Controller
         $totals['assets'] = $totals['fixed_assets'] + $totals['day_incomes'];
         $totals['balance'] = $totals['assets'] - $totals['expenses'];
 
+        $activeFixedEntries = $fixedExpenses
+            ->concat($fixedAssets)
+            ->where('is_active', true);
+        $monthlyEntries = FinancialEntry::query()
+            ->active()
+            ->whereIn('type', [FinancialEntry::TYPE_EXPENSE, FinancialEntry::TYPE_INCOME])
+            ->whereDate('entry_date', '>=', $selectedDate->startOfMonth()->toDateString())
+            ->whereDate('entry_date', '<=', $selectedDate->endOfMonth()->toDateString())
+            ->get();
+        $periodBalances = $this->periodBalances($selectedDate, $activeFixedEntries, $monthlyEntries);
+
         return view('admin.finances.day', [
             'selectedDate' => $selectedDate,
             'typeLabels' => FinancialEntry::TYPE_LABELS,
+            'entryNameOptions' => [
+                'expense' => FinancialEntry::EXPENSE_NAMES,
+                'income' => FinancialEntry::INCOME_NAMES,
+            ],
             'fixedExpenses' => $fixedExpenses,
             'dayExpenses' => $dayExpenses,
             'fixedAssets' => $fixedAssets,
             'dayIncomes' => $dayIncomes,
             'totals' => $totals,
+            'periodBalances' => $periodBalances,
         ]);
     }
 
@@ -147,7 +163,7 @@ class FinancialEntryController extends Controller
     private function validatedEntry(Request $request): array
     {
         return $request->validate([
-            'name' => ['required', 'string', 'max:120'],
+            'name' => ['required', 'string', 'max:120', Rule::in(FinancialEntry::namesForType($request->input('type')))],
             'description' => ['nullable', 'string', 'max:1000'],
             'amount' => ['required', 'numeric', 'min:0'],
             'type' => ['required', 'string', Rule::in(FinancialEntry::TYPES)],
@@ -219,5 +235,54 @@ class FinancialEntryController extends Controller
                 'balance' => $incomes - $expenses,
             ];
         });
+    }
+
+    private function periodBalances(CarbonImmutable $selectedDate, $fixedEntries, $monthlyEntries): array
+    {
+        $fortnightStart = $selectedDate->day <= 15
+            ? $selectedDate->startOfMonth()
+            : $selectedDate->startOfMonth()->setDay(16);
+        $fortnightEnd = $selectedDate->day <= 15
+            ? $selectedDate->startOfMonth()->setDay(15)
+            : $selectedDate->endOfMonth();
+        $fortnightEntries = $monthlyEntries->filter(function (FinancialEntry $entry) use ($fortnightStart, $fortnightEnd) {
+            return $entry->entry_date->betweenIncluded($fortnightStart, $fortnightEnd);
+        });
+
+        $monthly = $this->periodBalance($fixedEntries, $monthlyEntries, 1);
+        $fortnight = $this->periodBalance($fixedEntries, $fortnightEntries, 2);
+
+        return [
+            'fortnight' => [
+                ...$fortnight,
+                'label' => $selectedDate->day <= 15 ? 'Primera quincena' : 'Segunda quincena',
+                'range' => $fortnightStart->format('d/m/Y').' - '.$fortnightEnd->format('d/m/Y'),
+            ],
+            'monthly' => [
+                ...$monthly,
+                'label' => $selectedDate->locale('es')->translatedFormat('F Y'),
+                'range' => $selectedDate->startOfMonth()->format('d/m/Y').' - '.$selectedDate->endOfMonth()->format('d/m/Y'),
+            ],
+        ];
+    }
+
+    private function periodBalance($fixedEntries, $variableEntries, int $fixedDivider): array
+    {
+        $fixedExpenses = ((float) $fixedEntries->where('type', FinancialEntry::TYPE_FIXED_EXPENSE)->sum('amount')) / $fixedDivider;
+        $fixedAssets = ((float) $fixedEntries->where('type', FinancialEntry::TYPE_FIXED_ASSET)->sum('amount')) / $fixedDivider;
+        $variableExpenses = (float) $variableEntries->where('type', FinancialEntry::TYPE_EXPENSE)->sum('amount');
+        $variableIncomes = (float) $variableEntries->where('type', FinancialEntry::TYPE_INCOME)->sum('amount');
+        $expenses = $fixedExpenses + $variableExpenses;
+        $assets = $fixedAssets + $variableIncomes;
+
+        return [
+            'fixed_expenses' => $fixedExpenses,
+            'variable_expenses' => $variableExpenses,
+            'expenses' => $expenses,
+            'fixed_assets' => $fixedAssets,
+            'variable_incomes' => $variableIncomes,
+            'assets' => $assets,
+            'balance' => $assets - $expenses,
+        ];
     }
 }

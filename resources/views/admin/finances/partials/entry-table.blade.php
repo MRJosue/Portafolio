@@ -3,10 +3,10 @@
     <thead>
       <tr>
         <th>Grupo</th>
-        <th>Nombre</th>
+        <th>Tipo</th>
         <th>Descripcion</th>
         <th>Monto</th>
-        <th>Tipo</th>
+        <th>Movimiento</th>
         <th>Fecha</th>
         <th>Estado</th>
         <th>Acciones</th>
@@ -22,7 +22,14 @@
               <form id="{{ $formId }}" action="{{ route('admin.finances.entries.update', [$selectedDate->format('Y-m-d'), $entry]) }}" method="POST">
                 @csrf
                 @method('PATCH')
-                <input name="name" type="text" value="{{ $entry->name }}" required>
+                <select name="name" required data-entry-name-select>
+                  @foreach ($entryNameOptions['expense'] as $nameOption)
+                    <option value="{{ $nameOption }}" data-entry-kind="expense" @selected($entry->name === $nameOption)>{{ $nameOption }}</option>
+                  @endforeach
+                  @foreach ($entryNameOptions['income'] as $nameOption)
+                    <option value="{{ $nameOption }}" data-entry-kind="income" @selected($entry->name === $nameOption)>{{ $nameOption }}</option>
+                  @endforeach
+                </select>
               </form>
             </td>
             <td>
@@ -32,7 +39,7 @@
               <input form="{{ $formId }}" name="amount" type="number" min="0" step="0.01" value="{{ $entry->amount }}" required>
             </td>
             <td>
-              <select form="{{ $formId }}" name="type" required>
+              <select form="{{ $formId }}" name="type" required data-entry-type-select>
                 @foreach ($typeLabels as $type => $label)
                   <option value="{{ $type }}" @selected($entry->type === $type)>{{ $label }}</option>
                 @endforeach

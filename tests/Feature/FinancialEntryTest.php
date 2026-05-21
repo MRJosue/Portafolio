@@ -29,7 +29,7 @@ class FinancialEntryTest extends TestCase
         ])->assertRedirect();
 
         $this->actingAs($user)->post('/admin/finanzas/2026-05-18/entradas', [
-            'name' => 'Cafe',
+            'name' => 'Comida',
             'amount' => '45',
             'type' => FinancialEntry::TYPE_EXPENSE,
             'is_active' => '1',
@@ -42,7 +42,7 @@ class FinancialEntryTest extends TestCase
         ]);
 
         $this->assertDatabaseHas('financial_entries', [
-            'name' => 'Cafe',
+            'name' => 'Comida',
             'type' => FinancialEntry::TYPE_EXPENSE,
             'entry_date' => '2026-05-18 00:00:00',
         ]);
@@ -53,14 +53,14 @@ class FinancialEntryTest extends TestCase
         $user = User::factory()->create();
 
         FinancialEntry::create([
-            'name' => 'Servidor',
+            'name' => 'Servicios',
             'amount' => 300,
             'type' => FinancialEntry::TYPE_FIXED_EXPENSE,
             'is_active' => true,
         ]);
 
         FinancialEntry::create([
-            'name' => 'Consultoria',
+            'name' => 'Ingreso',
             'amount' => 900,
             'type' => FinancialEntry::TYPE_INCOME,
             'entry_date' => '2026-05-18',
@@ -69,14 +69,18 @@ class FinancialEntryTest extends TestCase
 
         $this->actingAs($user)->get('/admin/finanzas/2026-05-18')
             ->assertOk()
-            ->assertSee('Servidor')
-            ->assertSee('Consultoria')
+            ->assertSee('Servicios')
+            ->assertSee('Ingreso')
+            ->assertSee('BALANCE QUINCENAL')
+            ->assertSee('BALANCE MENSUAL')
+            ->assertDontSee('BALANCE DEL DIA')
+            ->assertSee('$750.00')
             ->assertSee('$600.00');
 
         $this->actingAs($user)->get('/admin/finanzas/2026-05-19')
             ->assertOk()
-            ->assertSee('Servidor')
-            ->assertDontSee('Consultoria');
+            ->assertSee('Servicios')
+            ->assertDontSee('value="900.00"', false);
     }
 
     public function test_calendar_shows_monthly_and_fortnight_balances(): void
@@ -91,14 +95,14 @@ class FinancialEntryTest extends TestCase
         ]);
 
         FinancialEntry::create([
-            'name' => 'Nomina',
+            'name' => 'Ingreso',
             'amount' => 5000,
             'type' => FinancialEntry::TYPE_FIXED_ASSET,
             'is_active' => true,
         ]);
 
         FinancialEntry::create([
-            'name' => 'Super',
+            'name' => 'Supermercado',
             'amount' => 600,
             'type' => FinancialEntry::TYPE_EXPENSE,
             'entry_date' => '2026-05-10',
@@ -106,7 +110,7 @@ class FinancialEntryTest extends TestCase
         ]);
 
         FinancialEntry::create([
-            'name' => 'Proyecto',
+            'name' => 'Ingreso',
             'amount' => 900,
             'type' => FinancialEntry::TYPE_INCOME,
             'entry_date' => '2026-05-20',
@@ -126,7 +130,7 @@ class FinancialEntryTest extends TestCase
     {
         $user = User::factory()->create();
         $entry = FinancialEntry::create([
-            'name' => 'Venta',
+            'name' => 'Ingreso',
             'amount' => 100,
             'type' => FinancialEntry::TYPE_INCOME,
             'entry_date' => '2026-05-18',
@@ -134,7 +138,7 @@ class FinancialEntryTest extends TestCase
         ]);
 
         $this->actingAs($user)->patch("/admin/finanzas/2026-05-18/entradas/{$entry->id}", [
-            'name' => 'Venta editada',
+            'name' => 'Ingreso',
             'amount' => 150,
             'type' => FinancialEntry::TYPE_INCOME,
             'is_active' => '1',
@@ -142,7 +146,7 @@ class FinancialEntryTest extends TestCase
 
         $this->assertDatabaseHas('financial_entries', [
             'id' => $entry->id,
-            'name' => 'Venta editada',
+            'name' => 'Ingreso',
             'amount' => 150,
         ]);
 
@@ -160,10 +164,29 @@ class FinancialEntryTest extends TestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)->post('/admin/finanzas/2026-05-18/entradas', [
-            'name' => 'Monto invalido',
+            'name' => 'Otros',
             'amount' => '-1',
             'type' => FinancialEntry::TYPE_EXPENSE,
             'is_active' => '1',
         ])->assertSessionHasErrors('amount');
+    }
+
+    public function test_income_entries_only_accept_income_name(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post('/admin/finanzas/2026-05-18/entradas', [
+            'name' => 'Comida',
+            'amount' => '100',
+            'type' => FinancialEntry::TYPE_INCOME,
+            'is_active' => '1',
+        ])->assertSessionHasErrors('name');
+
+        $this->actingAs($user)->post('/admin/finanzas/2026-05-18/entradas', [
+            'name' => 'Ingreso',
+            'amount' => '100',
+            'type' => FinancialEntry::TYPE_INCOME,
+            'is_active' => '1',
+        ])->assertSessionDoesntHaveErrors();
     }
 }

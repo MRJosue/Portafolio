@@ -29,6 +29,27 @@ class FinancialEntry extends Model
         self::TYPE_INCOME => 'Ingreso',
     ];
 
+    public const EXPENSE_NAMES = [
+        'Renta',
+        'Servicios',
+        'Supermercado',
+        'Comida',
+        'Transporte',
+        'Gasolina',
+        'Salud',
+        'Educacion',
+        'Deudas',
+        'Suscripciones',
+        'Entretenimiento',
+        'Ropa',
+        'Impuestos',
+        'Otros',
+    ];
+
+    public const INCOME_NAMES = [
+        'Ingreso',
+    ];
+
     protected $fillable = [
         'name',
         'description',
@@ -68,5 +89,12 @@ class FinancialEntry extends Model
     public function typeLabel(): string
     {
         return self::TYPE_LABELS[$this->type] ?? $this->type;
+    }
+
+    public static function namesForType(?string $type): array
+    {
+        return in_array($type, [self::TYPE_FIXED_EXPENSE, self::TYPE_EXPENSE], true)
+            ? self::EXPENSE_NAMES
+            : self::INCOME_NAMES;
     }
 }

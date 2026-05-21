@@ -63,8 +63,15 @@
               @csrf
               <div class="finance-entry-grid">
                 <div>
-                  <label for="name">Nombre</label>
-                  <input id="name" name="name" type="text" value="{{ old('name') }}" required>
+                  <label for="name">Tipo</label>
+                  <select id="name" name="name" required data-entry-name-select>
+                    @foreach ($entryNameOptions['expense'] as $nameOption)
+                      <option value="{{ $nameOption }}" data-entry-kind="expense" @selected(old('name') === $nameOption)>{{ $nameOption }}</option>
+                    @endforeach
+                    @foreach ($entryNameOptions['income'] as $nameOption)
+                      <option value="{{ $nameOption }}" data-entry-kind="income" @selected(old('name') === $nameOption)>{{ $nameOption }}</option>
+                    @endforeach
+                  </select>
                 </div>
                 <div>
                   <label for="description">Descripcion</label>
@@ -75,8 +82,8 @@
                   <input id="amount" name="amount" type="number" min="0" step="0.01" value="{{ old('amount', '0.00') }}" required>
                 </div>
                 <div>
-                  <label for="type">Tipo</label>
-                  <select id="type" name="type" required>
+                  <label for="type">Movimiento</label>
+                  <select id="type" name="type" required data-entry-type-select>
                     @foreach ($typeLabels as $type => $label)
                       <option value="{{ $type }}" @selected(old('type') === $type)>{{ $label }}</option>
                     @endforeach
@@ -111,6 +118,7 @@
               ],
               'selectedDate' => $selectedDate,
               'typeLabels' => $typeLabels,
+              'entryNameOptions' => $entryNameOptions,
             ])
           </section>
 
@@ -134,18 +142,47 @@
               ],
               'selectedDate' => $selectedDate,
               'typeLabels' => $typeLabels,
+              'entryNameOptions' => $entryNameOptions,
             ])
           </section>
 
           <section class="admin-panel finance-summary-panel">
+            <div class="admin-section-header finance-section-header">
+              <div>
+                <p class="eyebrow">BALANCE</p>
+                <h2>Quincenal y mensual</h2>
+              </div>
+            </div>
+
             <div class="finance-summary-head">
               <div>
-                <p class="eyebrow">BALANCE DEL DIA</p>
-                <h2>{{ $money($totals['assets']) }} - {{ $money($totals['expenses']) }}</h2>
+                <p class="eyebrow">BALANCE QUINCENAL</p>
+                <h2>{{ $periodBalances['fortnight']['label'] }}</h2>
+                <p>{{ $periodBalances['fortnight']['range'] }}</p>
+                <div class="finance-chip-row">
+                  <span>Ingresos: <strong>{{ $money($periodBalances['fortnight']['assets']) }}</strong></span>
+                  <span>Gastos: <strong>{{ $money($periodBalances['fortnight']['expenses']) }}</strong></span>
+                </div>
               </div>
               <div class="finance-balance">
                 <span>Resultado</span>
-                <strong class="{{ $totals['balance'] >= 0 ? 'is-positive' : 'is-negative' }}">{{ $money($totals['balance']) }}</strong>
+                <strong class="{{ $periodBalances['fortnight']['balance'] >= 0 ? 'is-positive' : 'is-negative' }}">{{ $money($periodBalances['fortnight']['balance']) }}</strong>
+              </div>
+            </div>
+
+            <div class="finance-summary-head">
+              <div>
+                <p class="eyebrow">BALANCE MENSUAL</p>
+                <h2>{{ ucfirst($periodBalances['monthly']['label']) }}</h2>
+                <p>{{ $periodBalances['monthly']['range'] }}</p>
+                <div class="finance-chip-row">
+                  <span>Ingresos: <strong>{{ $money($periodBalances['monthly']['assets']) }}</strong></span>
+                  <span>Gastos: <strong>{{ $money($periodBalances['monthly']['expenses']) }}</strong></span>
+                </div>
+              </div>
+              <div class="finance-balance">
+                <span>Resultado</span>
+                <strong class="{{ $periodBalances['monthly']['balance'] >= 0 ? 'is-positive' : 'is-negative' }}">{{ $money($periodBalances['monthly']['balance']) }}</strong>
               </div>
             </div>
           </section>
@@ -155,5 +192,37 @@
 
     <script src="{{ asset('js/signal.js') }}"></script>
     <script src="{{ asset('js/admin.js') }}?v=admin-sections-theme-1"></script>
+    <script>
+      document.querySelectorAll('[data-entry-type-select]').forEach((typeSelect) => {
+        const form = typeSelect.form || typeSelect.closest('form') || document;
+        const nameSelect = form.querySelector('[data-entry-name-select]');
+
+        if (! nameSelect) {
+          return;
+        }
+
+        const syncNameOptions = () => {
+          const kind = ['fixed_expense', 'expense'].includes(typeSelect.value) ? 'expense' : 'income';
+          const visibleOptions = [];
+
+          nameSelect.querySelectorAll('option').forEach((option) => {
+            const isVisible = option.dataset.entryKind === kind;
+            option.hidden = ! isVisible;
+            option.disabled = ! isVisible;
+
+            if (isVisible) {
+              visibleOptions.push(option);
+            }
+          });
+
+          if (! visibleOptions.includes(nameSelect.selectedOptions[0])) {
+            nameSelect.value = visibleOptions[0]?.value || '';
+          }
+        };
+
+        typeSelect.addEventListener('change', syncNameOptions);
+        syncNameOptions();
+      });
+    </script>
   </body>
 </html>
