@@ -19,6 +19,7 @@
 
         <nav class="admin-side-nav" aria-label="Paginas del admin">
           <a href="#overview" data-admin-link="overview">Resumen</a>
+          <a href="{{ route('talents.index') }}">Talentos</a>
           <a href="#projects" data-admin-link="projects">Proyectos</a>
           <a href="#profile-card" data-admin-link="profile-card">Perfil</a>
           <a href="{{ route('admin.finances.calendar') }}">Finanzas</a>
@@ -78,6 +79,7 @@
             <p class="eyebrow">ATAJOS</p>
             <div class="admin-quick-grid">
               <a href="#projects" data-admin-link="projects">Crear proyecto</a>
+              <a href="{{ route('talents.index') }}">Crear talento</a>
               <a href="#profile-card" data-admin-link="profile-card">Actualizar fotos</a>
               <a href="{{ route('admin.finances.calendar') }}">Registrar finanzas</a>
               <a href="#posts" data-admin-link="posts">Publicar post</a>

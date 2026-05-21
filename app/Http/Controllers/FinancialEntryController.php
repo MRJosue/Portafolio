@@ -25,6 +25,21 @@ class FinancialEntryController extends Controller
             ->get()
             ->groupBy(fn (FinancialEntry $entry) => $entry->entry_date->toDateString());
 
+        $monthlyEntries = FinancialEntry::query()
+            ->active()
+            ->whereIn('type', [FinancialEntry::TYPE_EXPENSE, FinancialEntry::TYPE_INCOME])
+            ->whereDate('entry_date', '>=', $month->startOfMonth()->toDateString())
+            ->whereDate('entry_date', '<=', $month->endOfMonth()->toDateString())
+            ->get();
+
+        $fixedEntries = FinancialEntry::query()
+            ->active()
+            ->whereIn('type', [FinancialEntry::TYPE_FIXED_EXPENSE, FinancialEntry::TYPE_FIXED_ASSET])
+            ->get();
+
+        $monthlySummary = $this->monthlySummary($fixedEntries, $monthlyEntries);
+        $fortnightSummaries = $this->fortnightSummaries($month, $monthlyEntries);
+
         $calendarDays = collect();
         for ($day = $startOfCalendar; $day->lte($endOfCalendar); $day = $day->addDay()) {
             $entries = $dailyEntries->get($day->toDateString(), collect());
@@ -41,6 +56,8 @@ class FinancialEntryController extends Controller
             'month' => $month,
             'previousMonth' => $month->subMonth(),
             'nextMonth' => $month->addMonth(),
+            'monthlySummary' => $monthlySummary,
+            'fortnightSummaries' => $fortnightSummaries,
             'calendarDays' => $calendarDays,
         ]);
     }
@@ -154,5 +171,53 @@ class FinancialEntryController extends Controller
         return (float) $entries
             ->where('is_active', true)
             ->sum('amount');
+    }
+
+    private function monthlySummary($fixedEntries, $monthlyEntries): array
+    {
+        $summary = [
+            'fixed_expenses' => $fixedEntries->where('type', FinancialEntry::TYPE_FIXED_EXPENSE)->sum('amount'),
+            'variable_expenses' => $monthlyEntries->where('type', FinancialEntry::TYPE_EXPENSE)->sum('amount'),
+            'fixed_assets' => $fixedEntries->where('type', FinancialEntry::TYPE_FIXED_ASSET)->sum('amount'),
+            'variable_incomes' => $monthlyEntries->where('type', FinancialEntry::TYPE_INCOME)->sum('amount'),
+        ];
+
+        $summary['expenses'] = $summary['fixed_expenses'] + $summary['variable_expenses'];
+        $summary['assets'] = $summary['fixed_assets'] + $summary['variable_incomes'];
+        $summary['balance'] = $summary['assets'] - $summary['expenses'];
+
+        return $summary;
+    }
+
+    private function fortnightSummaries(CarbonImmutable $month, $monthlyEntries)
+    {
+        $periods = [
+            [
+                'label' => 'Primera quincena',
+                'start' => $month->startOfMonth(),
+                'end' => $month->startOfMonth()->setDay(15),
+            ],
+            [
+                'label' => 'Segunda quincena',
+                'start' => $month->startOfMonth()->setDay(16),
+                'end' => $month->endOfMonth(),
+            ],
+        ];
+
+        return collect($periods)->map(function (array $period) use ($monthlyEntries) {
+            $entries = $monthlyEntries->filter(function (FinancialEntry $entry) use ($period) {
+                return $entry->entry_date->betweenIncluded($period['start'], $period['end']);
+            });
+
+            $expenses = (float) $entries->where('type', FinancialEntry::TYPE_EXPENSE)->sum('amount');
+            $incomes = (float) $entries->where('type', FinancialEntry::TYPE_INCOME)->sum('amount');
+
+            return [
+                ...$period,
+                'expenses' => $expenses,
+                'incomes' => $incomes,
+                'balance' => $incomes - $expenses,
+            ];
+        });
     }
 }

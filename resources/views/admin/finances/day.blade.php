@@ -1,133 +1,159 @@
-<x-app-layout>
-    <x-slot name="header">
-        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Detalle diario</p>
-                <h2 class="mt-1 text-2xl font-semibold text-slate-950">{{ $selectedDate->locale('es')->translatedFormat('d F Y') }}</h2>
+@php
+  $money = fn ($value) => '$'.number_format((float) $value, 2);
+@endphp
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Detalle financiero / {{ config('app.name') }}</title>
+    <link rel="stylesheet" href="{{ asset('css/signal.css') }}?v=finance-admin-2">
+  </head>
+  <body class="admin-body" data-admin-theme>
+    <canvas id="ember-canvas" class="motion-lines-canvas" aria-hidden="true"></canvas>
+    <div class="grain" aria-hidden="true"></div>
+
+    <div class="admin-shell">
+      <aside class="admin-aside" aria-label="Secciones">
+        <a class="brand admin-brand" href="{{ route('home') }}">
+          <span class="brand-mark"></span>
+          <span>Warm Bento Studio</span>
+        </a>
+
+        <nav class="admin-side-nav" aria-label="Paginas internas">
+          <a href="{{ route('admin.index') }}">Admin</a>
+          <a href="{{ route('talents.index') }}">Talentos</a>
+          <a class="is-active" href="{{ route('admin.finances.calendar', ['month' => $selectedDate->format('Y-m')]) }}">Finanzas</a>
+          <a href="{{ route('projects.index') }}">Vista publica</a>
+        </nav>
+
+        <div class="admin-aside-actions">
+          <button class="theme-toggle" type="button" data-theme-toggle aria-label="Cambiar modo claro u oscuro">
+            <span data-theme-label>Modo claro</span>
+          </button>
+          <a href="{{ route('home') }}">Home</a>
+        </div>
+      </aside>
+
+      <main class="admin-main">
+        <header class="admin-top">
+          <div>
+            <p class="eyebrow">DETALLE DIARIO</p>
+            <h1>{{ $selectedDate->locale('es')->translatedFormat('d F Y') }}</h1>
+            <p>Captura movimientos puntuales y administra conceptos fijos que se reflejan en el resumen mensual.</p>
+          </div>
+          <a class="admin-link-button" href="{{ route('admin.finances.calendar', ['month' => $selectedDate->format('Y-m')]) }}">Volver al calendario</a>
+        </header>
+
+        <section class="admin-page finance-page">
+          @if (session('finance_status'))
+            <p class="status">{{ session('finance_status') }}</p>
+          @endif
+
+          @if ($errors->any())
+            <p class="status error">Revisa los campos marcados. Los montos deben ser numericos y mayores o iguales a 0.</p>
+          @endif
+
+          <section class="admin-panel">
+            <p class="eyebrow">NUEVA ENTRADA</p>
+            <h2>Registrar movimiento</h2>
+
+            <form action="{{ route('admin.finances.entries.store', $selectedDate->format('Y-m-d')) }}" method="POST" class="admin-form finance-entry-form">
+              @csrf
+              <div class="finance-entry-grid">
+                <div>
+                  <label for="name">Nombre</label>
+                  <input id="name" name="name" type="text" value="{{ old('name') }}" required>
+                </div>
+                <div>
+                  <label for="description">Descripcion</label>
+                  <input id="description" name="description" type="text" value="{{ old('description') }}">
+                </div>
+                <div>
+                  <label for="amount">Monto</label>
+                  <input id="amount" name="amount" type="number" min="0" step="0.01" value="{{ old('amount', '0.00') }}" required>
+                </div>
+                <div>
+                  <label for="type">Tipo</label>
+                  <select id="type" name="type" required>
+                    @foreach ($typeLabels as $type => $label)
+                      <option value="{{ $type }}" @selected(old('type') === $type)>{{ $label }}</option>
+                    @endforeach
+                  </select>
+                </div>
+                <label class="check-row">
+                  <input name="is_active" type="checkbox" value="1" @checked(old('is_active', true))>
+                  Activo
+                </label>
+              </div>
+              <button class="button primary" type="submit">Agregar</button>
+            </form>
+          </section>
+
+          <section class="admin-panel">
+            <div class="admin-section-header finance-section-header">
+              <div>
+                <p class="eyebrow">PASIVOS</p>
+                <h2>Gastos</h2>
+              </div>
+              <div class="finance-chip-row">
+                <span>Fijos: <strong>{{ $money($totals['fixed_expenses']) }}</strong></span>
+                <span>Del dia: <strong>{{ $money($totals['day_expenses']) }}</strong></span>
+                <span>Total: <strong>{{ $money($totals['expenses']) }}</strong></span>
+              </div>
             </div>
-            <a href="{{ route('admin.finances.calendar', ['month' => $selectedDate->format('Y-m')]) }}" class="inline-flex items-center justify-center rounded-md border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50">
-                Volver al calendario
-            </a>
-        </div>
-    </x-slot>
 
-    @php
-        $money = fn ($value) => '$'.number_format((float) $value, 2);
-    @endphp
+            @include('admin.finances.partials.entry-table', [
+              'groups' => [
+                'Gastos fijos' => $fixedExpenses,
+                'Gastos del dia' => $dayExpenses,
+              ],
+              'selectedDate' => $selectedDate,
+              'typeLabels' => $typeLabels,
+            ])
+          </section>
 
-    <div class="py-10">
-        <div class="mx-auto max-w-7xl space-y-8 px-4 sm:px-6 lg:px-8">
-            @if (session('finance_status'))
-                <div class="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
-                    {{ session('finance_status') }}
-                </div>
-            @endif
+          <section class="admin-panel">
+            <div class="admin-section-header finance-section-header">
+              <div>
+                <p class="eyebrow">ACTIVOS</p>
+                <h2>Ingresos</h2>
+              </div>
+              <div class="finance-chip-row">
+                <span>Fijos: <strong>{{ $money($totals['fixed_assets']) }}</strong></span>
+                <span>Del dia: <strong>{{ $money($totals['day_incomes']) }}</strong></span>
+                <span>Total: <strong>{{ $money($totals['assets']) }}</strong></span>
+              </div>
+            </div>
 
-            @if ($errors->any())
-                <div class="rounded-md border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800">
-                    Revisa los campos marcados. Los montos deben ser numericos y mayores o iguales a 0.
-                </div>
-            @endif
+            @include('admin.finances.partials.entry-table', [
+              'groups' => [
+                'Activos fijos' => $fixedAssets,
+                'Ingresos del dia' => $dayIncomes,
+              ],
+              'selectedDate' => $selectedDate,
+              'typeLabels' => $typeLabels,
+            ])
+          </section>
 
-            <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">Nueva entrada</p>
-                        <h3 class="mt-1 text-xl font-semibold text-slate-950">Registrar movimiento</h3>
-                    </div>
-                </div>
-
-                <form action="{{ route('admin.finances.entries.store', $selectedDate->format('Y-m-d')) }}" method="POST" class="mt-5 grid gap-4 lg:grid-cols-12">
-                    @csrf
-                    <div class="lg:col-span-3">
-                        <label for="name" class="text-sm font-semibold text-slate-700">Nombre</label>
-                        <input id="name" name="name" type="text" value="{{ old('name') }}" required class="mt-1 w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-slate-900 focus:ring-slate-900">
-                    </div>
-                    <div class="lg:col-span-3">
-                        <label for="description" class="text-sm font-semibold text-slate-700">Descripcion</label>
-                        <input id="description" name="description" type="text" value="{{ old('description') }}" class="mt-1 w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-slate-900 focus:ring-slate-900">
-                    </div>
-                    <div class="lg:col-span-2">
-                        <label for="amount" class="text-sm font-semibold text-slate-700">Monto</label>
-                        <input id="amount" name="amount" type="number" min="0" step="0.01" value="{{ old('amount', '0.00') }}" required class="mt-1 w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-slate-900 focus:ring-slate-900">
-                    </div>
-                    <div class="lg:col-span-2">
-                        <label for="type" class="text-sm font-semibold text-slate-700">Tipo</label>
-                        <select id="type" name="type" required class="mt-1 w-full rounded-md border-slate-300 text-sm shadow-sm focus:border-slate-900 focus:ring-slate-900">
-                            @foreach ($typeLabels as $type => $label)
-                                <option value="{{ $type }}" @selected(old('type') === $type)>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <label class="flex items-center gap-2 text-sm font-semibold text-slate-700 lg:col-span-1 lg:pt-7">
-                        <input name="is_active" type="checkbox" value="1" @checked(old('is_active', true)) class="rounded border-slate-300 text-slate-950 focus:ring-slate-900">
-                        Activo
-                    </label>
-                    <div class="lg:col-span-1 lg:pt-6">
-                        <button type="submit" class="w-full rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800">
-                            Agregar
-                        </button>
-                    </div>
-                </form>
-            </section>
-
-            <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.28em] text-rose-500">Pasivos</p>
-                        <h3 class="mt-1 text-xl font-semibold text-slate-950">Gastos / pasivos</h3>
-                    </div>
-                    <div class="grid gap-2 text-sm sm:grid-cols-3">
-                        <span class="rounded-md bg-rose-50 px-3 py-2 text-rose-700">Fijos: <strong>{{ $money($totals['fixed_expenses']) }}</strong></span>
-                        <span class="rounded-md bg-rose-50 px-3 py-2 text-rose-700">Del dia: <strong>{{ $money($totals['day_expenses']) }}</strong></span>
-                        <span class="rounded-md bg-slate-950 px-3 py-2 text-white">Total: <strong>{{ $money($totals['expenses']) }}</strong></span>
-                    </div>
-                </div>
-
-                @include('admin.finances.partials.entry-table', [
-                    'groups' => [
-                        'Gastos fijos' => $fixedExpenses,
-                        'Gastos del dia' => $dayExpenses,
-                    ],
-                    'selectedDate' => $selectedDate,
-                    'typeLabels' => $typeLabels,
-                ])
-            </section>
-
-            <section class="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-                <div class="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                    <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-600">Activos</p>
-                        <h3 class="mt-1 text-xl font-semibold text-slate-950">Activos / ingresos</h3>
-                    </div>
-                    <div class="grid gap-2 text-sm sm:grid-cols-3">
-                        <span class="rounded-md bg-emerald-50 px-3 py-2 text-emerald-700">Fijos: <strong>{{ $money($totals['fixed_assets']) }}</strong></span>
-                        <span class="rounded-md bg-emerald-50 px-3 py-2 text-emerald-700">Del dia: <strong>{{ $money($totals['day_incomes']) }}</strong></span>
-                        <span class="rounded-md bg-slate-950 px-3 py-2 text-white">Total: <strong>{{ $money($totals['assets']) }}</strong></span>
-                    </div>
-                </div>
-
-                @include('admin.finances.partials.entry-table', [
-                    'groups' => [
-                        'Activos fijos' => $fixedAssets,
-                        'Ingresos del dia' => $dayIncomes,
-                    ],
-                    'selectedDate' => $selectedDate,
-                    'typeLabels' => $typeLabels,
-                ])
-            </section>
-
-            <section class="rounded-lg border border-slate-900 bg-slate-950 p-6 text-white shadow-sm">
-                <p class="text-xs font-semibold uppercase tracking-[0.28em] text-slate-300">Balance del dia</p>
-                <div class="mt-3 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-                    <p class="text-lg text-slate-200">
-                        {{ $money($totals['assets']) }} - {{ $money($totals['expenses']) }}
-                    </p>
-                    <strong class="text-4xl font-semibold {{ $totals['balance'] >= 0 ? 'text-emerald-300' : 'text-rose-300' }}">
-                        {{ $money($totals['balance']) }}
-                    </strong>
-                </div>
-            </section>
-        </div>
+          <section class="admin-panel finance-summary-panel">
+            <div class="finance-summary-head">
+              <div>
+                <p class="eyebrow">BALANCE DEL DIA</p>
+                <h2>{{ $money($totals['assets']) }} - {{ $money($totals['expenses']) }}</h2>
+              </div>
+              <div class="finance-balance">
+                <span>Resultado</span>
+                <strong class="{{ $totals['balance'] >= 0 ? 'is-positive' : 'is-negative' }}">{{ $money($totals['balance']) }}</strong>
+              </div>
+            </div>
+          </section>
+        </section>
+      </main>
     </div>
-</x-app-layout>
+
+    <script src="{{ asset('js/signal.js') }}"></script>
+    <script src="{{ asset('js/admin.js') }}?v=admin-sections-theme-1"></script>
+  </body>
+</html>

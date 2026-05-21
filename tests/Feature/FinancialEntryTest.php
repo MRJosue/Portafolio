@@ -79,6 +79,49 @@ class FinancialEntryTest extends TestCase
             ->assertDontSee('Consultoria');
     }
 
+    public function test_calendar_shows_monthly_and_fortnight_balances(): void
+    {
+        $user = User::factory()->create();
+
+        FinancialEntry::create([
+            'name' => 'Renta',
+            'amount' => 1200,
+            'type' => FinancialEntry::TYPE_FIXED_EXPENSE,
+            'is_active' => true,
+        ]);
+
+        FinancialEntry::create([
+            'name' => 'Nomina',
+            'amount' => 5000,
+            'type' => FinancialEntry::TYPE_FIXED_ASSET,
+            'is_active' => true,
+        ]);
+
+        FinancialEntry::create([
+            'name' => 'Super',
+            'amount' => 600,
+            'type' => FinancialEntry::TYPE_EXPENSE,
+            'entry_date' => '2026-05-10',
+            'is_active' => true,
+        ]);
+
+        FinancialEntry::create([
+            'name' => 'Proyecto',
+            'amount' => 900,
+            'type' => FinancialEntry::TYPE_INCOME,
+            'entry_date' => '2026-05-20',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)->get('/admin/finanzas?month=2026-05')
+            ->assertOk()
+            ->assertSee('RESUMEN MENSUAL')
+            ->assertSee('Balance por quincena')
+            ->assertSee('$4,100.00')
+            ->assertSee('$-600.00')
+            ->assertSee('$900.00');
+    }
+
     public function test_admin_can_update_and_delete_financial_entries(): void
     {
         $user = User::factory()->create();

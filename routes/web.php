@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\TalentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route('themes.editorial-black'))->name('home');
@@ -27,6 +28,10 @@ Route::get('/dashboard', function () {
 
 Route::middleware('auth')->group(function () {
     Route::get('/admin', [AdminController::class, 'index'])->name('admin.index');
+    Route::get('/talents', [TalentController::class, 'index'])->name('talents.index');
+    Route::post('/talents/import', [TalentController::class, 'import'])->name('talents.import');
+    Route::delete('/talents/import', [TalentController::class, 'clearImport'])->name('talents.import.clear');
+    Route::post('/talents', [TalentController::class, 'store'])->name('talents.store');
     Route::get('/admin/finanzas', [FinancialEntryController::class, 'calendar'])->name('admin.finances.calendar');
     Route::get('/admin/finanzas/{date}', [FinancialEntryController::class, 'day'])->name('admin.finances.day');
     Route::post('/admin/finanzas/{date}/entradas', [FinancialEntryController::class, 'store'])->name('admin.finances.entries.store');
