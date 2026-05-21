@@ -3,10 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\ChatSession;
+use App\Models\FinancialEntry;
 use App\Models\Post;
 use App\Models\Project;
 use App\Models\SiteSetting;
 use App\Models\Subscriber;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
@@ -22,6 +24,7 @@ class AdminController extends Controller
             'posts' => Post::query()->latest()->get(),
             'projects' => Project::query()->latest()->get(),
             'subscribers' => Subscriber::query()->latest()->get(),
+            'financeDashboard' => $this->financeDashboard(),
             'profileSettings' => $this->profileSettings(),
             'chatSessions' => ChatSession::query()
                 ->with(['messages' => fn ($query) => $query->oldest()])
@@ -29,6 +32,97 @@ class AdminController extends Controller
                 ->latest()
                 ->get(),
         ]);
+    }
+
+    private function financeDashboard(): array
+    {
+        $today = CarbonImmutable::now();
+        $fixedEntries = FinancialEntry::query()
+            ->active()
+            ->whereIn('type', [FinancialEntry::TYPE_FIXED_EXPENSE, FinancialEntry::TYPE_FIXED_ASSET])
+            ->get();
+        $monthlyEntries = FinancialEntry::query()
+            ->active()
+            ->whereIn('type', [FinancialEntry::TYPE_EXPENSE, FinancialEntry::TYPE_INCOME])
+            ->whereDate('entry_date', '>=', $today->startOfMonth()->toDateString())
+            ->whereDate('entry_date', '<=', $today->endOfMonth()->toDateString())
+            ->get();
+
+        $fortnightStart = $today->day <= 15 ? $today->startOfMonth() : $today->startOfMonth()->setDay(16);
+        $fortnightEnd = $today->day <= 15 ? $today->startOfMonth()->setDay(15) : $today->endOfMonth();
+        $fortnightEntries = $monthlyEntries->filter(function (FinancialEntry $entry) use ($fortnightStart, $fortnightEnd) {
+            return $entry->entry_date->betweenIncluded($fortnightStart, $fortnightEnd);
+        });
+
+        return [
+            'month_label' => ucfirst($today->locale('es')->translatedFormat('F Y')),
+            'fortnight_label' => $today->day <= 15 ? 'Primera quincena' : 'Segunda quincena',
+            'monthly' => $this->financePeriodSummary($fixedEntries, $monthlyEntries, 1),
+            'fortnight' => $this->financePeriodSummary($fixedEntries, $fortnightEntries, 2),
+            'movement_totals' => $this->financeMovementTotals($fixedEntries, $monthlyEntries),
+            'expense_categories' => $this->financeExpenseCategories($fixedEntries, $monthlyEntries),
+        ];
+    }
+
+    private function financePeriodSummary($fixedEntries, $variableEntries, int $fixedDivider): array
+    {
+        $fixedExpenses = ((float) $fixedEntries->where('type', FinancialEntry::TYPE_FIXED_EXPENSE)->sum('amount')) / $fixedDivider;
+        $fixedAssets = ((float) $fixedEntries->where('type', FinancialEntry::TYPE_FIXED_ASSET)->sum('amount')) / $fixedDivider;
+        $variableExpenses = (float) $variableEntries->where('type', FinancialEntry::TYPE_EXPENSE)->sum('amount');
+        $variableIncomes = (float) $variableEntries->where('type', FinancialEntry::TYPE_INCOME)->sum('amount');
+        $expenses = $fixedExpenses + $variableExpenses;
+        $assets = $fixedAssets + $variableIncomes;
+
+        return [
+            'expenses' => $expenses,
+            'assets' => $assets,
+            'balance' => $assets - $expenses,
+        ];
+    }
+
+    private function financeMovementTotals($fixedEntries, $monthlyEntries): array
+    {
+        $entriesByType = [
+            FinancialEntry::TYPE_FIXED_EXPENSE => $fixedEntries,
+            FinancialEntry::TYPE_EXPENSE => $monthlyEntries,
+            FinancialEntry::TYPE_FIXED_ASSET => $fixedEntries,
+            FinancialEntry::TYPE_INCOME => $monthlyEntries,
+        ];
+
+        return collect(FinancialEntry::TYPE_LABELS)
+            ->map(function (string $label, string $type) use ($entriesByType) {
+                return [
+                    'label' => $label,
+                    'amount' => (float) $entriesByType[$type]->where('type', $type)->sum('amount'),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function financeExpenseCategories($fixedEntries, $monthlyEntries): array
+    {
+        return collect(FinancialEntry::EXPENSE_NAMES)
+            ->map(function (string $name) use ($fixedEntries, $monthlyEntries) {
+                $fixedAmount = (float) $fixedEntries
+                    ->where('type', FinancialEntry::TYPE_FIXED_EXPENSE)
+                    ->where('name', $name)
+                    ->sum('amount');
+                $variableAmount = (float) $monthlyEntries
+                    ->where('type', FinancialEntry::TYPE_EXPENSE)
+                    ->where('name', $name)
+                    ->sum('amount');
+
+                return [
+                    'name' => $name,
+                    'fixed_amount' => $fixedAmount,
+                    'variable_amount' => $variableAmount,
+                    'total' => $fixedAmount + $variableAmount,
+                ];
+            })
+            ->filter(fn (array $category) => $category['total'] > 0)
+            ->values()
+            ->all();
     }
 
     public function storePost(Request $request): RedirectResponse

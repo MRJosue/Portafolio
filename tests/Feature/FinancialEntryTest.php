@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\FinancialEntry;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -188,5 +189,55 @@ class FinancialEntryTest extends TestCase
             'type' => FinancialEntry::TYPE_INCOME,
             'is_active' => '1',
         ])->assertSessionDoesntHaveErrors();
+    }
+
+    public function test_admin_dashboard_shows_finance_summary_by_movement_and_expense_type(): void
+    {
+        CarbonImmutable::setTestNow('2026-05-21 12:00:00');
+        $user = User::factory()->create();
+
+        FinancialEntry::create([
+            'name' => 'Renta',
+            'amount' => 1200,
+            'type' => FinancialEntry::TYPE_FIXED_EXPENSE,
+            'is_active' => true,
+        ]);
+
+        FinancialEntry::create([
+            'name' => 'Comida',
+            'amount' => 300,
+            'type' => FinancialEntry::TYPE_EXPENSE,
+            'entry_date' => '2026-05-21',
+            'is_active' => true,
+        ]);
+
+        FinancialEntry::create([
+            'name' => 'Ingreso',
+            'amount' => 5000,
+            'type' => FinancialEntry::TYPE_FIXED_ASSET,
+            'is_active' => true,
+        ]);
+
+        FinancialEntry::create([
+            'name' => 'Ingreso',
+            'amount' => 1000,
+            'type' => FinancialEntry::TYPE_INCOME,
+            'entry_date' => '2026-05-21',
+            'is_active' => true,
+        ]);
+
+        $this->actingAs($user)->get('/admin')
+            ->assertOk()
+            ->assertSee('Dashboard financiero')
+            ->assertSee('Gasto fijo')
+            ->assertSee('Gasto')
+            ->assertSee('Activo fijo')
+            ->assertSee('Ingreso')
+            ->assertSee('Renta')
+            ->assertSee('Comida')
+            ->assertSee('$4,500.00')
+            ->assertSee('$2,600.00');
+
+        CarbonImmutable::setTestNow();
     }
 }

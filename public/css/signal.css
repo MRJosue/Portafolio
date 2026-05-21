@@ -1251,6 +1251,79 @@ html[data-signal-theme="light"] .project-visual::after {
   gap: 0.75rem;
 }
 
+.admin-finance-dashboard {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-finance-metrics,
+.admin-finance-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.admin-finance-metrics article,
+.admin-finance-list article,
+.admin-finance-category-list article {
+  border: 1px solid var(--admin-line);
+  border-radius: 8px;
+  background: var(--admin-surface-soft);
+  padding: 1rem;
+}
+
+.admin-finance-metrics span,
+.admin-finance-list span,
+.admin-finance-category-list span {
+  color: var(--admin-low);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.admin-finance-metrics strong {
+  display: block;
+  margin: 0.45rem 0;
+  color: var(--admin-text);
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 4vw, 3.8rem);
+  font-weight: 500;
+  line-height: 0.95;
+}
+
+.admin-finance-metrics small {
+  color: var(--admin-muted);
+}
+
+.admin-finance-columns section,
+.admin-finance-list,
+.admin-finance-category-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.admin-finance-list article,
+.admin-finance-category-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-finance-list strong,
+.admin-finance-category-list b {
+  color: var(--admin-text);
+  font-family: var(--font-serif);
+  font-size: 1.4rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.admin-finance-category-list strong {
+  display: block;
+  color: var(--admin-text);
+}
+
 .admin-panel {
   border-color: var(--admin-line);
   background: var(--admin-surface);
@@ -1833,6 +1906,8 @@ html[data-signal-theme="light"] .project-visual::after {
   .admin-quick-grid,
   .admin-profile-preview-grid,
   .admin-palette-grid,
+  .admin-finance-metrics,
+  .admin-finance-columns,
   .talent-grid,
   .finance-metric-grid,
   .finance-entry-grid {
@@ -1872,6 +1947,8 @@ html[data-signal-theme="light"] .project-visual::after {
   .admin-quick-grid,
   .admin-profile-preview-grid,
   .admin-palette-grid,
+  .admin-finance-metrics,
+  .admin-finance-columns,
   .talent-grid,
   .finance-metric-grid,
   .finance-period-grid,

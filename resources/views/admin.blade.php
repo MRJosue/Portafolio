@@ -1,3 +1,7 @@
+@php
+  $money = fn ($value) => '$'.number_format((float) $value, 2);
+@endphp
+
 <!doctype html>
 <html lang="es">
   <head>
@@ -84,6 +88,66 @@
               <a href="{{ route('admin.finances.calendar') }}">Registrar finanzas</a>
               <a href="#posts" data-admin-link="posts">Publicar post</a>
               <a href="#chats" data-admin-link="chats">Revisar chats</a>
+            </div>
+          </div>
+
+          <div class="admin-panel admin-finance-dashboard">
+            <div class="admin-section-header finance-section-header">
+              <div>
+                <p class="eyebrow">FINANZAS</p>
+                <h2>Dashboard financiero</h2>
+              </div>
+              <a class="admin-link-button" href="{{ route('admin.finances.calendar') }}">Abrir calendario</a>
+            </div>
+
+            <div class="admin-finance-metrics">
+              <article>
+                <span>{{ $financeDashboard['fortnight_label'] }}</span>
+                <strong class="{{ $financeDashboard['fortnight']['balance'] >= 0 ? 'is-positive' : 'is-negative' }}">{{ $money($financeDashboard['fortnight']['balance']) }}</strong>
+                <small>{{ $money($financeDashboard['fortnight']['assets']) }} ingresos / {{ $money($financeDashboard['fortnight']['expenses']) }} gastos</small>
+              </article>
+              <article>
+                <span>{{ $financeDashboard['month_label'] }}</span>
+                <strong class="{{ $financeDashboard['monthly']['balance'] >= 0 ? 'is-positive' : 'is-negative' }}">{{ $money($financeDashboard['monthly']['balance']) }}</strong>
+                <small>{{ $money($financeDashboard['monthly']['assets']) }} ingresos / {{ $money($financeDashboard['monthly']['expenses']) }} gastos</small>
+              </article>
+            </div>
+
+            <div class="admin-finance-columns">
+              <section>
+                <p class="eyebrow">MOVIMIENTOS DEL MES</p>
+                <div class="admin-finance-list">
+                  @foreach ($financeDashboard['movement_totals'] as $movement)
+                    <article>
+                      <span>{{ $movement['label'] }}</span>
+                      <strong>{{ $money($movement['amount']) }}</strong>
+                    </article>
+                  @endforeach
+                </div>
+              </section>
+
+              <section>
+                <p class="eyebrow">GASTOS POR TIPO</p>
+                <div class="admin-finance-category-list">
+                  @forelse ($financeDashboard['expense_categories'] as $category)
+                    <article>
+                      <div>
+                        <strong>{{ $category['name'] }}</strong>
+                        <span>Fijo {{ $money($category['fixed_amount']) }} / Variable {{ $money($category['variable_amount']) }}</span>
+                      </div>
+                      <b>{{ $money($category['total']) }}</b>
+                    </article>
+                  @empty
+                    <article>
+                      <div>
+                        <strong>Sin gastos activos</strong>
+                        <span>Los gastos capturados apareceran aqui por tipo.</span>
+                      </div>
+                      <b>{{ $money(0) }}</b>
+                    </article>
+                  @endforelse
+                </div>
+              </section>
             </div>
           </div>
         </section>
